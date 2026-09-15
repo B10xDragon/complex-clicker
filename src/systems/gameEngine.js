@@ -1,10 +1,29 @@
 import {buildings,upgrades,research,achievements} from '../data/gameData.js';
 export const VERSION=3;
 export function fresh(){return {version:VERSION,resources:{energy:25,credits:10,research:0,data:0,matter:0,antimatter:0,darkEnergy:0,quantumCores:0,shards:0,knowledge:0},buildings:Object.fromEntries(buildings.map(b=>[b.id,0])),upgrades:{},research:{},stats:{clicks:0,totalEnergy:0,totalProduced:0,prestiges:0,ascensions:0,time:0,offline:0,bestCombo:0,longestSession:0},combo:0,lastClick:0,boost:0,missions:{daily:0,tutorial:0},exploration:{unlocked:false,regions:{home:1},missions:[]},log:['SYSTEM ONLINE — welcome, architect.'],settings:{reducedMotion:false,particles:true}}}
-export function load(){try{const raw=localStorage.getItem('starforge-save');if(!raw)return fresh();const p=JSON.parse(raw);return migrate(validate(p))}catch{return fresh()}}
-function validate(p){if(!p||typeof p!=='object'||!p.resources||!p.buildings)throw Error('bad save');return p}
-function migrate(p){const n=fresh();return {...n,...p,version:VERSION,resources:{...n.resources,...p.resources},buildings:{...n.buildings,...p.buildings},stats:{...n.stats,...p.stats},upgrades:{...n.upgrades,...p.upgrades},research:{...n.research,...p.research},settings:{...n.settings,...p.settings}}}
-export function save(s){localStorage.setItem('starforge-save',JSON.stringify({...s,version:VERSION}))}
+export const storage = {
+ getItem(key){try{return localStorage.getItem(key)}catch{return null}},
+ setItem(key,value){try{localStorage.setItem(key,String(value));return true}catch{return false}},
+ removeItem(key){try{localStorage.removeItem(key)}catch{}}
+};
+export function normalize(p){
+ if(!p || typeof p!=='object' || !p.resources || !p.buildings) throw Error('Invalid save');
+ const n=fresh();
+ for(const group of ['resources','buildings','stats']) for(const key of Object.keys(n[group])){
+  const value=p[group]?.[key];if(typeof value==='number'&&Number.isFinite(value)&&value>=0)n[group][key]=Math.min(value,1e100);
+ }
+ for(const key of Object.keys(n.buildings))n.buildings[key]=Math.floor(n.buildings[key]);
+ for(const u of upgrades)if(p.upgrades?.[u.id])n.upgrades[u.id]=u;
+ for(const r of research)if(p.research?.[r.id])n.research[r.id]={...r,value:r.effect==='prod'?(r.id==='efficiency'?.2:.1):1};
+ for(const key of ['combo','lastClick','boost'])if(Number.isFinite(p[key])&&p[key]>=0)n[key]=p[key];
+ if(Array.isArray(p.log))n.log=p.log.filter(x=>typeof x==='string').slice(0,50);
+ for(const key of ['reducedMotion','particles'])if(typeof p.settings?.[key]==='boolean')n.settings[key]=p.settings[key];
+ for(const id of ['home','vega','orion','void'])if(p.exploration?.regions?.[id])n.exploration.regions[id]=1;
+ n.exploration.unlocked=!!n.research.exploration;
+ return n;
+}
+export function load(){const raw=storage.getItem('starforge-save');if(!raw)return fresh();try{return normalize(JSON.parse(raw))}catch{storage.setItem('starforge-recovery',raw);return fresh()}}
+export function save(s){const ok=storage.setItem('starforge-save',JSON.stringify({...s,version:VERSION}));if(ok)storage.setItem('starforge-last',Date.now());return ok}
 export function cost(b,n){return Math.floor(b.base*Math.pow(b.scale,n))}
 export function totalProd(s){let mult=1+(s.upgrades.reactors?.value||0)+(s.research.industrial?.value||0)+(s.research.efficiency?.value||0)+(s.upgrades.singularity?.value||0);if(s.boost>0)mult*=2;const out={};for(const b of buildings){const level=s.buildings[b.id]||0;for(const [r,v] of Object.entries(b.prod))out[r]=(out[r]||0)+v*level}if(s.research.ai)out.data=(out.data||0)*1.5;for(const r of Object.keys(out))out[r]*=mult;return out}
 export function click(s){const now=Date.now();s.stats.clicks++;s.stats.totalEnergy++;s.combo=now-s.lastClick<2200?s.combo+1:1;s.lastClick=now;s.stats.bestCombo=Math.max(s.stats.bestCombo,s.combo);let amount=1+(s.upgrades.capacitors?.value||0);const crit=Math.random()<(0.05+(s.upgrades.precision?.value||0)*.05);if(crit)amount*=2+(s.upgrades.precision?.value||0);amount*=1+Math.min(s.combo,50)*.01;s.resources.energy+=amount;s.resources.credits+=(crit?.2:.1);s.resources.energy=Math.min(s.resources.energy,1e300);s.stats.totalProduced+=amount;return {amount,crit}}
@@ -14,7 +33,7 @@ export function buyUpgrade(s,id){const u=upgrades.find(x=>x.id===id);if(s.upgrad
 export function buyResearch(s,id){const r=research.find(x=>x.id===id);if(s.research[id]||r.req.some(x=>!s.research[x])||s.resources.research<r.cost)return false;s.resources.research-=r.cost;s.research[id]={...r,value:r.effect==='prod'?(r.id==='efficiency'?.2:.1):1};if(r.id==='exploration')s.exploration.unlocked=true;return true}
 export function prestige(s){const gain=Math.floor(Math.sqrt(Math.max(0,s.resources.energy)/1e6));if(!gain)return 0;const keep={shards:s.resources.shards+gain,knowledge:s.resources.knowledge};const n=fresh();Object.assign(s,n);s.resources={...n.resources,...keep};s.stats.prestiges++;s.log.unshift(`TRANSCENDENCE COMPLETE +${gain} prestige shards`);return gain}
 export function ascend(s){if(!s.research.galactic||s.resources.shards<100)return false;s.resources.shards=0;s.resources.knowledge++;s.stats.ascensions++;s.log.unshift('ASCENSION COMPLETE — cosmic knowledge acquired');return true}
-export function offline(s){const then=Number(localStorage.getItem('starforge-last')||Date.now()),secs=Math.max(0,Math.min((Date.now()-then)/1000, s.upgrades.offline?43200:7200));if(secs>5){const p=totalProd(s);for(const [r,v] of Object.entries(p))s.resources[r]+=v*secs;s.stats.offline+=secs;s.log.unshift(`OFFLINE SYNC — ${format(secs)} away, production recovered`);return {secs,prod:p}}return null}
+export function offline(s){const then=Number(storage.getItem('starforge-last')||Date.now()),secs=Math.max(0,Math.min((Date.now()-then)/1000, s.upgrades.offline?43200:7200));if(secs>5){const p=totalProd(s);for(const [r,v] of Object.entries(p))s.resources[r]+=v*secs;s.stats.offline+=secs;s.log.unshift(`OFFLINE SYNC — ${format(secs)} away, production recovered`);return {secs,prod:p}}return null}
 export function format(n){if(!Number.isFinite(n))return '∞';if(n<1000)return n.toFixed(n<10?1:0);const units=['k','M','B','T','Qa','Qi','Sx','Sp','Oc'];let i=0;while(n>=1000&&i<units.length){n/=1000;i++}return n.toFixed(n<10?2:1)+units[i-1]}
 export function achievementProgress(s,a){if(a.type==='clicks')return s.stats.clicks;if(a.type==='energy')return s.stats.totalEnergy;if(a.type==='combo')return s.stats.bestCombo;if(a.type==='research')return Object.keys(s.research).length;return s.buildings[a.type]||0}
 export {buildings,upgrades,research,achievements};
