@@ -33,4 +33,23 @@ index.html
 ## Implemented systems
 
 Manual critical clicks, combo streaks, ten resource types, twelve scalable buildings, bulk buying, production/automation/conversion/offline upgrades, branching research, first and second prestige layers, galaxy map and expedition unlock, missions, achievements, statistics, events/logs, local save protection, keyboard/touch input, responsive iPad/mobile layout, and GitHub Pages-compatible static deployment.
+## Galaxy progression (v5)
 
+Galaxy navigation unlocks through Space Exploration research or the Deep-space
+Navigation upgrade. Select a map node to jump to its destination card. Discoveries
+are instant energy purchases: the card shows the exact cost, prerequisite route,
+and any required research. Each discovery adds 5% to the production multiplier.
+Buttons update as resources accumulate, without leaving the page.
+
+Eight systems now form a branching route. Vega leads to Orion and the Silent Void,
+or to Sirius, Rigel, Andromeda and Event Horizon. Seven discovered systems support
+outposts with ten levels each. Outposts consume credits and matter and produce
+data, matter, research, dark energy, quantum cores, antimatter or cosmic knowledge.
+Their output receives ordinary production modifiers and works offline.
+Sixteen additional milestone missions award one-time prestige shards.
+
+Version 5 saves preserve older discoveries and initialize outposts at level zero.
+Prestige resets discoveries and outposts; claimed milestone rewards remain claimed.
+Exploration rules are in src/systems/exploration.js; destination and milestone
+definitions are in src/data/gameData.js. Run regression checks with
+`node --test tests/regressions.test.js` and build with `npm run build`.
