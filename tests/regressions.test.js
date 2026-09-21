@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {regions} from '../src/data/gameData.js';
-import {discoveryStatus,outpostStatus,upgradeOutpost,skillStatus,upgradeSkill,frontierStatus,advanceFrontier} from '../src/systems/exploration.js';
+import {regions,galaxyTypes} from '../src/data/gameData.js';
+import {discoveryStatus,outpostStatus,upgradeOutpost,skillStatus,upgradeSkill,frontierStatus,advanceFrontier,galaxyBoosts} from '../src/systems/exploration.js';
 import {fresh,normalize,click,tick,buy,prestige,ascend,missions,claimMission,claimAchievement,discover,convertEnergy,offline,totalProd} from '../src/systems/gameEngine.js';
 test('mission reward is paid once and remains claimed after migration',()=>{
  const s=fresh();s.stats.totalEnergy=1200;missions(s);
@@ -46,11 +46,11 @@ test('energy sale unlocks credit progression and achievements pay once',()=>{
 test('offline production applies boost only for remaining boost duration',()=>{
  const entries=new Map();globalThis.localStorage={getItem:k=>entries.get(k),setItem:(k,v)=>entries.set(k,v)};
  const s=fresh();s.buildings.manual=5;s.boost=10;entries.set('starforge-last',String(Date.now()-100000));
- offline(s);assert.ok(s.resources.energy>=135&&s.resources.energy<136);assert.equal(s.boost,0);
+ offline(s);assert.ok(s.resources.energy>=136&&s.resources.energy<137);assert.equal(s.boost,0);
  const before=s.resources.energy;offline(s);assert.equal(s.resources.energy,before);
 });
 test('all galaxy routes enforce exact costs, prerequisites and single payment',()=>{
- const s=fresh();s.research.exploration={};s.resources.energy=1e25;
+ const s=fresh();s.research.exploration={};s.resources.energy=1e40;
  assert.equal(discover(s,'void'),false);assert.equal(discover(s,'unknown'),false);
  for(const r of regions.filter(r=>r.parent)){
   if(r.tech&&!s.research[r.tech]){assert.equal(discover(s,r.id),false);s.research[r.tech]={};}
@@ -60,6 +60,10 @@ test('all galaxy routes enforce exact costs, prerequisites and single payment',(
   assert.equal(s.resources.energy,before-r.cost);assert.equal(discover(s,r.id),false);
  }
  assert.equal(Object.keys(s.exploration.regions).length,regions.length);
+});
+test('galaxy web contains 250 typed nodes and mapped types grant distinct boosts',()=>{
+ const s=fresh();assert.equal(regions.length,250);assert.equal(galaxyTypes.length,12);s.exploration.regions.vega=1;s.exploration.regions.orion=1;
+ const boosts=galaxyBoosts(s);assert.ok(boosts.production>0||boosts.research>0||boosts.energy>0);assert.ok(regions.every(r=>r.type));
 });
 test('galaxy skill branches and uncapped frontier spend knowledge correctly',()=>{
  const s=fresh();s.resources.knowledge=1e6;
@@ -76,7 +80,7 @@ test('outposts charge scaling costs, produce resources and stop at ten levels',(
  const first=outpostStatus(s,'vega').cost;
  assert.ok(upgradeOutpost(s,'vega'));assert.equal(s.resources.credits,1e12-first.credits);
  assert.ok(outpostStatus(s,'vega').cost.credits>first.credits);
- assert.equal(totalProd(s).data,.525);tick(s,10);assert.equal(s.resources.data,5.25);
+ assert.equal(totalProd(s).data,.53445);tick(s,10);assert.equal(s.resources.data,5.3445);
  for(let i=1;i<10;i++)assert.ok(upgradeOutpost(s,'vega'));
  assert.equal(upgradeOutpost(s,'vega'),false);
  const restored=normalize(JSON.parse(JSON.stringify(s)));
