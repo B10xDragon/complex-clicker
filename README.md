@@ -66,3 +66,30 @@ per node with scaling costs; Frontier mastery has no maximum level. Exploration 
 src/systems/exploration.js; destination, galaxy and skill definitions are in
 src/data/gameData.js. Run regression checks with
 `node --test tests/regressions.test.js` and build with `npm run build`.
+
+## Civilization expansion (v8)
+
+The first true Ascension now unlocks the civilization era. A first Ascension awards
+one Cosmic Knowledge and exposes five starter awakenings; only one can be chosen.
+The permanent Cosmic Knowledge Tree contains 120 data-driven nodes across
+Expansion, Industry, Science, Civilization, Warfare, and a hidden Transcendence
+branch. Later branches require purchased prerequisites and later Ascensions.
+
+After Ascension, the game adds population, housing, employment, happiness, stability,
+education, culture, administrative capacity, colony specialization, governments, and
+policies. Mapped galaxies can become colonies with specializations such as research,
+industrial, fortress, trade, mining, energy, administrative, shipyard, and quantum
+worlds. These bonuses include tradeoffs such as energy demand, slower growth, or
+reduced happiness.
+
+The civilization layer also includes procedurally generated civilizations with
+different personalities and strategic goals, diplomacy actions, relationship values,
+trade charters, a strategic fleet system, seven ship classes, war objectives and
+resolution, and multi-stage megastructures. The simulation is aggregated and ticked
+with the existing browser loop rather than updating every colony or ship each frame.
+
+Old saves receive safe defaults for Cosmic Knowledge and civilization state, and
+their existing resources, research, buildings, discoveries, skills, and statistics
+are retained. Expansion regression coverage includes first Ascension choice
+exclusivity, migration, colonies, diplomacy, fleets, warfare, and megastructure
+stages.
