@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {regions} from '../src/data/gameData.js';
-import {discoveryStatus,outpostStatus,upgradeOutpost} from '../src/systems/exploration.js';
+import {discoveryStatus,outpostStatus,upgradeOutpost,skillStatus,upgradeSkill,frontierStatus,advanceFrontier} from '../src/systems/exploration.js';
 import {fresh,normalize,click,tick,buy,prestige,ascend,missions,claimMission,claimAchievement,discover,convertEnergy,offline,totalProd} from '../src/systems/gameEngine.js';
 test('mission reward is paid once and remains claimed after migration',()=>{
  const s=fresh();s.stats.totalEnergy=1200;missions(s);
@@ -26,6 +26,11 @@ test('prestige retains lifetime history and technologies',()=>{
  const s=fresh();s.resources.energy=1e6;s.stats.prestiges=2;s.stats.clicks=100;s.research.industrial={value:.1};
  assert.equal(prestige(s),1);assert.equal(s.stats.prestiges,3);assert.equal(s.stats.clicks,100);assert.ok(s.research.industrial);
 });
+test('galaxy skills and frontier persist through prestige and ascension',()=>{
+ const s=fresh();s.resources.energy=1e6;s.resources.knowledge=4;s.exploration.skills.nav1=2;s.exploration.frontier=3;
+ assert.ok(prestige(s));assert.equal(s.exploration.skills.nav1,2);assert.equal(s.exploration.frontier,3);
+ s.research.galactic={};s.resources.shards=100;assert.ok(ascend(s));assert.equal(s.exploration.skills.nav1,2);assert.equal(s.exploration.frontier,3);
+});
 test('ascension resets the first layer',()=>{
  const s=fresh();s.research.galactic={};s.resources.shards=100;s.buildings.manual=20;
  assert.ok(ascend(s));assert.equal(s.resources.knowledge,1);assert.equal(s.resources.shards,0);assert.equal(s.buildings.manual,0);
@@ -45,16 +50,24 @@ test('offline production applies boost only for remaining boost duration',()=>{
  const before=s.resources.energy;offline(s);assert.equal(s.resources.energy,before);
 });
 test('all galaxy routes enforce exact costs, prerequisites and single payment',()=>{
- const s=fresh();s.research.exploration={};s.resources.energy=1e12;
+ const s=fresh();s.research.exploration={};s.resources.energy=1e25;
  assert.equal(discover(s,'void'),false);assert.equal(discover(s,'unknown'),false);
  for(const r of regions.filter(r=>r.parent)){
-  if(r.tech){assert.equal(discover(s,r.id),false);s.research[r.tech]={};}
-  const before=s.resources.energy;s.resources.energy=r.cost-1;
+  if(r.tech&&!s.research[r.tech]){assert.equal(discover(s,r.id),false);s.research[r.tech]={};}
+  const before=s.resources.energy;s.resources.energy=r.cost*.99;
   assert.equal(discoveryStatus(s,r.id).ok,false);assert.equal(discover(s,r.id),false);
   s.resources.energy=before;assert.equal(discover(s,r.id),true);
   assert.equal(s.resources.energy,before-r.cost);assert.equal(discover(s,r.id),false);
  }
- assert.equal(Object.keys(s.exploration.regions).length,8);
+ assert.equal(Object.keys(s.exploration.regions).length,regions.length);
+});
+test('galaxy skill branches and uncapped frontier spend knowledge correctly',()=>{
+ const s=fresh();s.resources.knowledge=1e6;
+ assert.ok(skillStatus(s,'nav1').ok);assert.ok(upgradeSkill(s,'nav1'));assert.equal(s.exploration.skills.nav1,1);
+ assert.equal(upgradeSkill(s,'nav3'),false);assert.ok(upgradeSkill(s,'nav2'));assert.equal(skillStatus(s,'nav3').ok,true);
+ s.exploration.skills.nav2=1;assert.ok(upgradeSkill(s,'nav3'));
+ const before=frontierStatus(s).cost;assert.ok(advanceFrontier(s));assert.equal(s.exploration.frontier,1);assert.ok(frontierStatus(s).cost>before);
+ const restored=normalize(JSON.parse(JSON.stringify(s)));assert.equal(restored.exploration.skills.nav3,1);assert.equal(restored.exploration.frontier,1);
 });
 test('outposts charge scaling costs, produce resources and stop at ten levels',()=>{
  const s=fresh();s.research.exploration={};s.resources.energy=1000;
