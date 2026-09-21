@@ -1,7 +1,9 @@
-import {regions,galaxySkills} from '../data/gameData.js';
+import {regions,galaxySkills,galaxyTypes} from '../data/gameData.js';
 
 export const navigationReady=s=>!!(s.research.exploration||s.upgrades.explorer);
 export const discoveryBonus=s=>(Object.keys(s.exploration.regions).length-1)*.05;
+export const isGalaxyVisible=(s,r)=>!!s.exploration.regions[r.id]||!!(r.parent&&s.exploration.regions[r.parent]);
+export function galaxyBoosts(s){const result={production:0,energy:0,credits:0,research:0,knowledge:0,outpost:0};for(const r of regions)if(s.exploration.regions[r.id]){const type=galaxyTypes.find(t=>t.id===r.type);for(const [key,value] of Object.entries(type?.boost||{}))result[key]=(result[key]||0)+value;}return result;}
 export const skillLevel=(s,id)=>Math.max(0,Math.floor(s.exploration.skills?.[id]||0));
 export function skillCost(s,id){const node=galaxySkills.find(n=>n.id===id),level=skillLevel(s,id);return node?Math.ceil(node.cost*Math.pow(1.55,level)):Infinity;}
 export function skillStatus(s,id){const node=galaxySkills.find(n=>n.id===id);if(!node)return {ok:false,label:'Unknown skill',level:0,cost:Infinity};const level=skillLevel(s,id);if(level>=node.max)return {ok:false,label:'MASTERED',level,cost:0};if(node.req.some(req=>skillLevel(s,req)<1))return {ok:false,label:'Requires '+node.req.join(', '),level,cost:skillCost(s,id)};const cost=skillCost(s,id);return {ok:s.resources.knowledge>=cost,label:s.resources.knowledge>=cost?'UPGRADE':'NEEDS KNOWLEDGE',level,cost};}
@@ -40,7 +42,7 @@ export function upgradeOutpost(s,id){
 export function outpostProduction(s){
  const result={};
  for(const r of regions)if(s.exploration.regions[r.id])for(const [key,value] of Object.entries(r.prod||{})){
-  result[key]=(result[key]||0)+value*(s.exploration.outposts?.[r.id]||0)*(1+(skillLevel(s,'nav3')*.02));
+  result[key]=(result[key]||0)+value*(s.exploration.outposts?.[r.id]||0)*(1+(skillLevel(s,'nav3')*.02)+galaxyBoosts(s).outpost);
  }
  return result;
 }
