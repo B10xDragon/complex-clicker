@@ -6,6 +6,7 @@ import {fresh,normalize,click,tick,buy,prestige,ascend,missions,claimMission,cla
 import {starterCosmicNodes,cosmicNodes} from '../src/systems/cosmicEngine.js';
 import {chooseStarter,buyCosmic,cosmicStatus} from '../src/systems/cosmicEngine.js';
 import {colonize,specializeColony,setGovernment,togglePolicy,diplomacyAction,buildFleet,resolveWar,buildMega,militaryPower} from '../src/systems/civilization.js';
+import {currentEra,nextBreakthroughs,buildingMilestone,prestigeBenefits,startOpportunity,opportunityStatus} from '../src/systems/progression.js';
 test('mission reward is paid once and remains claimed after migration',()=>{
  const s=fresh();s.stats.totalEnergy=1200;missions(s);
  assert.equal(claimMission(s,'daily'),true);assert.equal(s.resources.shards,2);
@@ -131,4 +132,18 @@ test('diplomacy, fleets and strategic war resolve through the engine',()=>{
 test('multi-stage megastructures scale costs and preserve stage progress',()=>{
  const s=fresh();s.stats.ascensions=1;s.civilization.unlocked=true;s.resources.energy=1e20;s.resources.research=1e20;s.resources.matter=1e20;
  assert.ok(buildMega(s,'planetary-computer'));assert.equal(s.civilization.megastructures['planetary-computer'],1);assert.ok(buildMega(s,'planetary-computer'));assert.equal(s.civilization.megastructures['planetary-computer'],2);assert.ok(buildMega(s,'planetary-computer'));assert.equal(s.civilization.megastructures['planetary-computer'],3);assert.equal(buildMega(s,'planetary-computer'),false);
+});
+test('progression defaults migrate and eras expose the next meaningful goals',()=>{
+ const s=fresh();delete s.progression;const restored=normalize(JSON.parse(JSON.stringify(s)));
+ assert.ok(restored.progression);assert.equal(currentEra(restored).id,'spark');
+ assert.ok(nextBreakthroughs(restored).length>0);assert.equal(restored.progression.journal[0].label,'First spark');
+});
+test('building milestones and synergies activate without invalid production',()=>{
+ const s=fresh();s.buildings.manual=10;s.buildings.solar=25;
+ assert.equal(buildingMilestone(s,'manual').level,10);assert.ok(totalProd(s).energy>0);
+ tick(s,3600);for(const value of Object.values(s.resources))assert.ok(Number.isFinite(value)&&value>=0);
+});
+test('prestige milestones and optional opportunities are deterministic',()=>{
+ const s=fresh();s.stats.prestiges=2;assert.equal(prestigeBenefits(s).manual,2);assert.equal(prestigeBenefits(s).credits,100);
+ assert.ok(startOpportunity(s,'solar-surge'));assert.equal(opportunityStatus(s).id,'solar-surge');assert.equal(startOpportunity(s,'research-window'),false);
 });
