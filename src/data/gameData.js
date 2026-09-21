@@ -67,6 +67,14 @@ export const galaxyTypes=[
 for(const [i,r] of regions.entries()){r.type=r.type||galaxyTypes[i%galaxyTypes.length].id;r.mapX=r.mapX??(1200+(r.x-50)*5);r.mapY=r.mapY??(1200+(r.y-50)*5);}
 const generatedGalaxies=Array.from({length:250-regions.length},(_,i)=>{const number=i+1,type=galaxyTypes[i%galaxyTypes.length],ring=Math.floor(i/10),angle=(i*137.508)*Math.PI/180,parent=i<12?['horizon','void','andromeda','atlas','sirius','rigel','orion','tarsis','lyra','kepler','helix','infinity'][i]:`g${String(1+Math.floor((i-12)*.82)).padStart(3,'0')}`;return {id:`g${String(number).padStart(3,'0')}`,name:`${type.name} ${String(number).padStart(3,'0')}`,parent,galaxy:ring<8?'triangulum':ring<16?'perseus':'deepfield',type:type.id,cost:Math.ceil(2e21*Math.pow(1.075,i)),prod:type.prod,mapX:1200+Math.cos(angle)*(180+ring*82),mapY:1200+Math.sin(angle)*(180+ring*82),desc:type.desc};});
 regions.push(...generatedGalaxies);
+export const tutorialMissions=[
+ {id:'tutorial-1',name:'Restart the core',desc:'Build 1 Manual Generator',metric:'manual',goal:1,reward:{credits:25,energy:50},tip:'Open Infrastructure and build the highlighted starter generator.'},
+ {id:'tutorial-2',name:'Stable output',desc:'Reach 1 energy/s',metric:'output',goal:1,reward:{credits:50,research:25},tip:'Buy more Manual Generators, then wait for production to accumulate.'},
+ {id:'tutorial-3',name:'Catch the sun',desc:'Build 1 Solar Array',metric:'solar',goal:1,reward:{credits:150,research:75},tip:'Solar Arrays require 50 lifetime energy and amplify your manual network.'},
+ {id:'tutorial-4',name:'Orbital grid',desc:'Reach 50 energy/s',metric:'output',goal:50,reward:{research:200,shards:1},tip:'Mix solar arrays with manual generators until the grid is self-sustaining.'},
+ {id:'tutorial-5',name:'First theory',desc:'Complete Industrial Engineering',metric:'industrial',goal:1,reward:{research:500,credits:500},tip:'Spend research in the Research lattice to unlock production bonuses.'},
+ {id:'tutorial-6',name:'Leave Sol',desc:'Discover Vega Relay',metric:'vega',goal:1,reward:{energy:1000,shards:2},tip:'Space Exploration reveals the first connected galaxy.'}
+];
 export const progressionMissions=[
  ...[1000,100000,10000000].map((goal,i)=>({id:'grid-'+i,name:['Fusion grid','Stellar grid','Galactic grid'][i],desc:'Reach '+goal.toLocaleString('en-US')+' energy/s',metric:'output',goal,reward:3+i*3})),
  ...[50,200,500].map((goal,i)=>({id:'builder-'+i,name:'Empire architect '+(i+1),desc:'Own '+goal+' building levels',metric:'buildings',goal,reward:2+i*2})),
