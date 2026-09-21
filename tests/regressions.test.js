@@ -1,5 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
+import {regions} from '../src/data/gameData.js';
+import {discoveryStatus,outpostStatus,upgradeOutpost} from '../src/systems/exploration.js';
 import {fresh,normalize,click,tick,buy,prestige,ascend,missions,claimMission,claimAchievement,discover,convertEnergy,offline,totalProd} from '../src/systems/gameEngine.js';
 test('mission reward is paid once and remains claimed after migration',()=>{
  const s=fresh();s.stats.totalEnergy=1200;missions(s);
@@ -41,4 +43,43 @@ test('offline production applies boost only for remaining boost duration',()=>{
  const s=fresh();s.buildings.manual=5;s.boost=10;entries.set('starforge-last',String(Date.now()-100000));
  offline(s);assert.ok(s.resources.energy>=135&&s.resources.energy<136);assert.equal(s.boost,0);
  const before=s.resources.energy;offline(s);assert.equal(s.resources.energy,before);
+});
+test('all galaxy routes enforce exact costs, prerequisites and single payment',()=>{
+ const s=fresh();s.research.exploration={};s.resources.energy=1e12;
+ assert.equal(discover(s,'void'),false);assert.equal(discover(s,'unknown'),false);
+ for(const r of regions.filter(r=>r.parent)){
+  if(r.tech){assert.equal(discover(s,r.id),false);s.research[r.tech]={};}
+  const before=s.resources.energy;s.resources.energy=r.cost-1;
+  assert.equal(discoveryStatus(s,r.id).ok,false);assert.equal(discover(s,r.id),false);
+  s.resources.energy=before;assert.equal(discover(s,r.id),true);
+  assert.equal(s.resources.energy,before-r.cost);assert.equal(discover(s,r.id),false);
+ }
+ assert.equal(Object.keys(s.exploration.regions).length,8);
+});
+test('outposts charge scaling costs, produce resources and stop at ten levels',()=>{
+ const s=fresh();s.research.exploration={};s.resources.energy=1000;
+ s.resources.credits=1e12;s.resources.matter=1e12;
+ assert.equal(upgradeOutpost(s,'vega'),false);discover(s,'vega');
+ const first=outpostStatus(s,'vega').cost;
+ assert.ok(upgradeOutpost(s,'vega'));assert.equal(s.resources.credits,1e12-first.credits);
+ assert.ok(outpostStatus(s,'vega').cost.credits>first.credits);
+ assert.equal(totalProd(s).data,.525);tick(s,10);assert.equal(s.resources.data,5.25);
+ for(let i=1;i<10;i++)assert.ok(upgradeOutpost(s,'vega'));
+ assert.equal(upgradeOutpost(s,'vega'),false);
+ const restored=normalize(JSON.parse(JSON.stringify(s)));
+ assert.equal(restored.exploration.outposts.vega,10);
+ restored.resources.energy=1e6;prestige(restored);
+ assert.deepEqual(restored.exploration.outposts,{});
+});
+test('legacy explorer upgrade restores navigation and known discoveries',()=>{
+ const s=fresh();delete s.exploration.outposts;s.upgrades.explorer={};
+ s.exploration.regions.void=1;
+ const restored=normalize(s);assert.ok(restored.exploration.unlocked);
+ assert.equal(restored.exploration.regions.void,1);
+ assert.deepEqual(restored.exploration.outposts,{});
+});
+test('new progression missions reward milestones once',()=>{
+ const s=fresh();s.buildings.manual=50;
+ assert.ok(claimMission(s,'builder-0'));assert.equal(claimMission(s,'builder-0'),false);
+ assert.equal(s.resources.shards,2);
 });
