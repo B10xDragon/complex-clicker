@@ -47,3 +47,4 @@ button{min-height:44px}
  .button-row,.row{flex-wrap:wrap;gap:8px}
  .research-tree{grid-template-columns:1fr}
 }
+.galaxy-destinations{margin-top:20px}.galaxy-destinations .panel{padding:22px;scroll-margin:20px}.galaxy-destinations button{min-height:44px;white-space:normal}.galaxy .stars,.galaxy:before,.galaxy svg{pointer-events:none}.galaxy .region{min-height:70px;min-width:60px;z-index:1}.galaxy .region:last-of-type{left:85%!important}.mission>div{flex:1;min-width:0}.mission{gap:20px}.region:focus-visible,.galaxy-destinations article:focus{outline:2px solid var(--cyan);outline-offset:4px}@media(max-width:600px){.galaxy{height:380px}.galaxy .region{max-width:76px}.galaxy .region b{font-size:10px}.galaxy-destinations{grid-template-columns:1fr}.mission{flex-wrap:wrap}.mission>div{flex-basis:100%}}
