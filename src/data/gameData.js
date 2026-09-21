@@ -50,6 +50,23 @@ export const regions=[
  ,{id:'origin',name:'Origin Engine',x:62,y:48,parent:'zenith',galaxy:'deepfield',cost:1e20,tech:'quantum',prod:{knowledge:1},desc:'A machine that reconstructs the first moments of a universe.'}
  ,{id:'infinity',name:'Infinity Gate',x:87,y:48,parent:'origin',galaxy:'deepfield',cost:1e21,tech:'galactic',prod:{energy:1e9,knowledge:.1},desc:'The final visible gate into an endlessly expanding frontier.'}
 ];
+export const galaxyTypes=[
+ {id:'forge',name:'Forge Galaxy',desc:'Industrial stars amplify matter and credits.',boost:{production:.018},prod:{matter:2,credits:40}},
+ {id:'archive',name:'Archive Galaxy',desc:'Ancient libraries accelerate research and data.',boost:{research:.04},prod:{research:8,data:4}},
+ {id:'reactor',name:'Reactor Galaxy',desc:'Dense suns produce a direct energy surge.',boost:{energy:.035},prod:{energy:150}},
+ {id:'quantum',name:'Quantum Galaxy',desc:'Probability engines generate quantum cores.',boost:{production:.012},prod:{quantumCores:.04}},
+ {id:'antimatter',name:'Antimatter Galaxy',desc:'Reversed stars refine high-density fuel.',boost:{production:.02},prod:{antimatter:.5}},
+ {id:'dark',name:'Dark Galaxy',desc:'Gravity wells bend dark-energy flows.',boost:{production:.025},prod:{darkEnergy:2}},
+ {id:'colony',name:'Colony Galaxy',desc:'Many worlds increase credit efficiency.',boost:{credits:.05},prod:{credits:160,data:5}},
+ {id:'dyson',name:'Dyson Galaxy',desc:'Megastructures gather power from every star.',boost:{energy:.06},prod:{energy:500}},
+ {id:'wormhole',name:'Wormhole Galaxy',desc:'Shortcuts make every connected outpost stronger.',boost:{outpost:.06},prod:{energy:300,matter:8}},
+ {id:'knowledge',name:'Knowledge Galaxy',desc:'Cosmic observatories produce knowledge.',boost:{knowledge:.08},prod:{knowledge:.02}},
+ {id:'mirror',name:'Mirror Galaxy',desc:'Reflective universes multiply every production path.',boost:{production:.05},prod:{energy:1000,credits:300}},
+ {id:'origin',name:'Origin Galaxy',desc:'A rare origin point improves all galaxy bonuses.',boost:{production:.09},prod:{research:100,data:40}}
+];
+for(const [i,r] of regions.entries()){r.type=r.type||galaxyTypes[i%galaxyTypes.length].id;r.mapX=r.mapX??(1200+(r.x-50)*5);r.mapY=r.mapY??(1200+(r.y-50)*5);}
+const generatedGalaxies=Array.from({length:250-regions.length},(_,i)=>{const number=i+1,type=galaxyTypes[i%galaxyTypes.length],ring=Math.floor(i/10),angle=(i*137.508)*Math.PI/180,parent=i<12?['horizon','void','andromeda','atlas','sirius','rigel','orion','tarsis','lyra','kepler','helix','infinity'][i]:`g${String(1+Math.floor((i-12)*.82)).padStart(3,'0')}`;return {id:`g${String(number).padStart(3,'0')}`,name:`${type.name} ${String(number).padStart(3,'0')}`,parent,galaxy:ring<8?'triangulum':ring<16?'perseus':'deepfield',type:type.id,cost:Math.ceil(2e21*Math.pow(1.075,i)),prod:type.prod,mapX:1200+Math.cos(angle)*(180+ring*82),mapY:1200+Math.sin(angle)*(180+ring*82),desc:type.desc};});
+regions.push(...generatedGalaxies);
 export const progressionMissions=[
  ...[1000,100000,10000000].map((goal,i)=>({id:'grid-'+i,name:['Fusion grid','Stellar grid','Galactic grid'][i],desc:'Reach '+goal.toLocaleString('en-US')+' energy/s',metric:'output',goal,reward:3+i*3})),
  ...[50,200,500].map((goal,i)=>({id:'builder-'+i,name:'Empire architect '+(i+1),desc:'Own '+goal+' building levels',metric:'buildings',goal,reward:2+i*2})),
