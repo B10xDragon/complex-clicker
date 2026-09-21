@@ -100,3 +100,9 @@ test('new progression missions reward milestones once',()=>{
  assert.ok(claimMission(s,'builder-0'));assert.equal(claimMission(s,'builder-0'),false);
  assert.equal(s.resources.shards,2);
 });
+test('tutorial quests guide the early currency loop and unlock in order',()=>{
+ const s=fresh();assert.equal(missions(s)[0].id,'tutorial-1');assert.equal(claimMission(s,'tutorial-1'),false);
+ assert.equal(buy(s,'manual',1),1);assert.equal(claimMission(s,'tutorial-1'),true);assert.equal(s.resources.credits,25);
+ assert.equal(missions(s)[1].locked,false);s.buildings.manual=5;assert.equal(claimMission(s,'tutorial-2'),true);assert.equal(s.resources.research,25);
+ assert.equal(missions(s)[2].locked,false);assert.equal(claimMission(s,'tutorial-2'),false);
+});
