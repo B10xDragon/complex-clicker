@@ -93,3 +93,32 @@ their existing resources, research, buildings, discoveries, skills, and statisti
 are retained. Expansion regression coverage includes first Ascension choice
 exclusivity, migration, colonies, diplomacy, fleets, warfare, and megastructure
 stages.
+
+## Progression expansion (v9)
+
+The progression layer now presents nine readable eras from Spark through Galactic
+Age. Each era is calculated from actual lifetime energy, buildings, research,
+exploration, prestige, colonies, trade, and megastructure progress, so the next
+step is always visible in the dashboard's Next Breakthroughs panel.
+
+Buildings now have milestone rewards at levels 10, 25, 50, and 100, with distinct
+effects per building. Cross-building synergies reward balanced networks: solar
+arrays improve manual generators, orbital factories reinforce mining, laboratories
+and quantum computers amplify each other, and Dyson/galactic infrastructure form a
+late-game production loop. Prestige milestones add persistent acceleration,
+automation memory, starting infrastructure, and improved reward scaling.
+
+Optional opportunities such as Solar Surge, Research Breakthrough, Trade Boom, and
+Exploration Window create short, deterministic bursts of activity with cooldowns;
+they are never gambling or real-money mechanics. The progression journal records
+first clicks, purchases, automation, research, era changes, prestige, and Ascension
+milestones. Old saves receive the new progression defaults automatically, and the
+expanded test suite covers migration, milestones, finite long simulations,
+prestige benefits, and opportunity cooldown behavior.
+
+## Developer checks
+
+```bash
+node --test tests/regressions.test.js
+npm run build
+```
