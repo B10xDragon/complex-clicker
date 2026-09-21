@@ -3,6 +3,9 @@ import assert from 'node:assert/strict';
 import {regions,galaxyTypes} from '../src/data/gameData.js';
 import {discoveryStatus,outpostStatus,upgradeOutpost,skillStatus,upgradeSkill,frontierStatus,advanceFrontier,galaxyBoosts} from '../src/systems/exploration.js';
 import {fresh,normalize,click,tick,buy,prestige,ascend,missions,claimMission,claimAchievement,discover,convertEnergy,offline,totalProd} from '../src/systems/gameEngine.js';
+import {starterCosmicNodes,cosmicNodes} from '../src/systems/cosmicEngine.js';
+import {chooseStarter,buyCosmic,cosmicStatus} from '../src/systems/cosmicEngine.js';
+import {colonize,specializeColony,setGovernment,togglePolicy,diplomacyAction,buildFleet,resolveWar,buildMega,militaryPower} from '../src/systems/civilization.js';
 test('mission reward is paid once and remains claimed after migration',()=>{
  const s=fresh();s.stats.totalEnergy=1200;missions(s);
  assert.equal(claimMission(s,'daily'),true);assert.equal(s.resources.shards,2);
@@ -105,4 +108,27 @@ test('tutorial quests guide the early currency loop and unlock in order',()=>{
  assert.equal(buy(s,'manual',1),1);assert.equal(claimMission(s,'tutorial-1'),true);assert.equal(s.resources.credits,25);
  assert.equal(missions(s)[1].locked,false);s.buildings.manual=5;assert.equal(claimMission(s,'tutorial-2'),true);assert.equal(s.resources.research,25);
  assert.equal(missions(s)[2].locked,false);assert.equal(claimMission(s,'tutorial-2'),false);
+});
+test('first ascension unlocks exactly one starter cosmic choice',()=>{
+ const s=fresh();s.research.galactic={};s.resources.shards=100;assert.ok(ascend(s));
+ assert.equal(s.stats.ascensions,1);assert.equal(s.resources.knowledge,1);assert.equal(starterCosmicNodes.length,5);
+ assert.ok(chooseStarter(s,starterCosmicNodes[0].id));assert.equal(Object.keys(s.cosmic.purchased).length,1);
+ assert.equal(chooseStarter(s,starterCosmicNodes[1].id),false);assert.equal(buyCosmic(s,starterCosmicNodes[1].id),false);
+ assert.equal(cosmicStatus(s,cosmicNodes.find(n=>n.branch===starterCosmicNodes[0].branch&&n.tier===1).id).ok,false);
+});
+test('old saves migrate with cosmic and civilization defaults without losing progress',()=>{
+ const old=fresh();old.resources.energy=98765;old.stats.clicks=42;delete old.cosmic;delete old.civilization;
+ const restored=normalize(JSON.parse(JSON.stringify(old)));assert.equal(restored.resources.energy,98765);assert.equal(restored.stats.clicks,42);assert.ok(restored.cosmic);assert.ok(restored.civilization);assert.equal(restored.civilization.unlocked,false);
+});
+test('civilization colonies, specialization and government interact with progression',()=>{
+ const s=fresh();s.stats.ascensions=1;s.cosmic={unlocked:true,firstChoice:'cosmic-civilization-0',purchased:{'cosmic-civilization-0':1}};s.civilization.unlocked=true;s.exploration.regions.vega=1;s.resources.credits=1e8;s.resources.culture=100;
+ assert.ok(colonize(s,'vega'));assert.ok(s.civilization.colonies.vega);assert.ok(specializeColony(s,'vega','research'));assert.ok(setGovernment(s,'directorate'));assert.ok(togglePolicy(s,'open-science'));tick(s,10);assert.ok(s.civilization.population>0);assert.ok(totalProd(s).research>=0);
+});
+test('diplomacy, fleets and strategic war resolve through the engine',()=>{
+ const s=fresh();s.stats.ascensions=1;s.civilization.unlocked=true;s.resources.credits=1000;s.resources.matter=1e6;
+ assert.ok(diplomacyAction(s,'civ-0','contact'));assert.ok(diplomacyAction(s,'civ-0','war'));assert.ok(buildFleet(s,'battleship',10));assert.ok(militaryPower(s)>0);assert.ok(resolveWar(s,'civ-0'));assert.equal(s.civilization.wars.length,0);
+});
+test('multi-stage megastructures scale costs and preserve stage progress',()=>{
+ const s=fresh();s.stats.ascensions=1;s.civilization.unlocked=true;s.resources.energy=1e20;s.resources.research=1e20;s.resources.matter=1e20;
+ assert.ok(buildMega(s,'planetary-computer'));assert.equal(s.civilization.megastructures['planetary-computer'],1);assert.ok(buildMega(s,'planetary-computer'));assert.equal(s.civilization.megastructures['planetary-computer'],2);assert.ok(buildMega(s,'planetary-computer'));assert.equal(s.civilization.megastructures['planetary-computer'],3);assert.equal(buildMega(s,'planetary-computer'),false);
 });
