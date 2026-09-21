@@ -1,4 +1,4 @@
-import {buildings,upgrades,research,achievements,regions,progressionMissions} from '../data/gameData.js';
+import {buildings,upgrades,research,achievements,regions,progressionMissions,tutorialMissions} from '../data/gameData.js';
 import {outpostProduction,skillBonus,galaxyBoosts} from './exploration.js';
 export {discover} from './exploration.js';
 export const VERSION=6;
@@ -33,7 +33,7 @@ export function load(){const raw=storage.getItem('starforge-save');if(!raw)retur
 export function save(s){const ok=storage.setItem('starforge-save',JSON.stringify({...s,version:VERSION}));if(ok)storage.setItem('starforge-last',Date.now());return ok}
 export function cost(b,n){return Math.floor(b.base*Math.pow(b.scale,n))}
 export function totalProd(s){const skill=skillBonus(s),galaxy=galaxyBoosts(s);let mult=1+(s.upgrades.reactors?.value||0)+(s.research.industrial?.value||0)+(s.research.efficiency?.value||0)+(s.upgrades.singularity?.value||0);mult*=1+Math.floor(s.buildings.fusion/10)*.05;mult*=1+Math.sqrt(s.resources.shards)*.1+s.resources.knowledge*.5;mult*=1+(Object.keys(s.exploration.regions).length-1)*.05;mult*=1+skill.production+skill.frontier+galaxy.production;if(s.boost>0)mult*=2;const out={};for(const b of buildings){const level=(s.buildings[b.id]||0)*(b.id==='manual'?1+s.buildings.solar*.02:1);for(const [r,v] of Object.entries(b.prod))out[r]=(out[r]||0)+v*level}for(const [r,v] of Object.entries(outpostProduction(s)))out[r]=(out[r]||0)+v;if(s.research.ai)out.data=(out.data||0)*1.5;for(const r of Object.keys(out))out[r]*=mult;for(const r of ['energy','credits','research','knowledge'])if(out[r])out[r]*=1+(galaxy[r]||0);return out}
-export function click(s){const now=Date.now();s.stats.clicks++;s.combo=now-s.lastClick<2200*(s.upgrades.rhythm?1.35:1)?s.combo+1:1;s.lastClick=now;s.stats.bestCombo=Math.max(s.stats.bestCombo,s.combo);let amount=1+(s.upgrades.capacitors?.value||0);const crit=Math.random()<(0.05+(s.upgrades.precision?.value||0)*.05);if(crit)amount*=2+(s.upgrades.precision?.value||0);amount*=1+Math.min(s.combo,50)*.01;s.resources.energy+=amount;s.resources.credits+=(crit?.2:.1);s.resources.energy=Math.min(s.resources.energy,1e300);s.stats.totalEnergy+=amount;s.stats.totalProduced+=amount;return {amount,crit}}
+export function click(s){const now=Date.now();s.stats.clicks++;s.combo=now-s.lastClick<2200*(s.upgrades.rhythm?1.35:1)?s.combo+1:1;s.lastClick=now;s.stats.bestCombo=Math.max(s.stats.bestCombo,s.combo);let amount=1+(s.upgrades.capacitors?.value||0);const crit=Math.random()<(0.05+(s.upgrades.precision?.value||0)*.05);if(crit)amount*=2+(s.upgrades.precision?.value||0);amount*=1+Math.min(s.combo,50)*.01;s.resources.energy+=amount;s.resources.credits+=(crit?.2:.1)+Math.min(s.combo,50)*.01;s.resources.energy=Math.min(s.resources.energy,1e300);s.stats.totalEnergy+=amount;s.stats.totalProduced+=amount;return {amount,crit}}
 export function tick(s,dt){if(!Number.isFinite(dt)||dt<=0)return totalProd(s);const prod=totalProd(s);s.stats.totalEnergy+=(prod.energy||0)*dt;for(const [r,v] of Object.entries(prod))s.resources[r]=Math.min(1e100,(s.resources[r]||0)+v*dt);s.stats.time+=dt;s.boostCooldown=Math.max(0,s.boostCooldown-dt);if(Date.now()-s.lastClick>2200*(s.upgrades.rhythm?1.35:1))s.combo=0;s.stats.totalProduced+=Object.values(prod).reduce((a,b)=>a+b,0)*dt;if(s.boost>0)s.boost=Math.max(0,s.boost-dt);return prod}
 export function buy(s,id,qty){const b=buildings.find(x=>x.id===id),n=s.buildings[id]||0;if(!b||Math.max(s.stats.totalEnergy,s.resources.energy)<b.unlock||!Number.isFinite(qty)||qty<=0)return 0;qty=Math.min(10000,Math.floor(qty));let bought=0;for(let i=0;i<qty;i++){const c=cost(b,n+bought);if(s.resources.credits<c)break;s.resources.credits-=c;bought++}s.buildings[id]+=bought;return bought}
 export function buyUpgrade(s,id){const u=upgrades.find(x=>x.id===id);if(!u||s.upgrades[id])return false;for(const [r,c] of Object.entries(u.cost))if((s.resources[r]||0)<c)return false;for(const [r,c] of Object.entries(u.cost))s.resources[r]-=c;s.upgrades[id]=u;return true}
@@ -59,8 +59,9 @@ export {buildings,upgrades,research,achievements};
 export function missions(s){
  const date=new Date().toISOString().slice(0,10);
  if(s.dailyDate!==date){s.dailyStart=s.dailyDate?s.stats.totalEnergy:0;s.dailyDate=date;delete s.claimed.daily;}
+ const tutorial=[...tutorialMissions].map((m,i)=>({...m,progress:m.metric==='output'?totalProd(s).energy||0:m.metric==='research'?Object.keys(s.research).length:m.metric==='industrial'?(s.research.industrial?1:0):m.metric==='vega'?s.exploration.regions.vega||0:s.buildings[m.metric]||0,locked:i>0&&!s.claimed[tutorialMissions[i-1].id]}));
  return [
- {id:'tutorial',name:'Tutorial directive',desc:'Reach 50 energy/s',goal:50,progress:totalProd(s).energy||0,reward:1},
+ ...tutorial,
  {id:'daily',name:'Daily pulse',desc:'Generate 1,000 energy today (resets at 00:00 UTC)',goal:1000,progress:Math.max(0,s.stats.totalEnergy-s.dailyStart),reward:2},
  {id:'objective',name:'Architect’s path',desc:'Own 10 buildings',goal:10,progress:Object.values(s.buildings).reduce((a,b)=>a+b,0),reward:1},
  {id:'expedition',name:'Beyond the blue',desc:'Discover Vega Relay',goal:1,progress:s.exploration.regions.vega||0,reward:1},
@@ -68,8 +69,8 @@ export function missions(s){
  ];
 }
 export function claimMission(s,id){
- const m=missions(s).find(x=>x.id===id);if(!m||s.claimed[id]||m.progress<m.goal)return false;
- s.claimed[id]=true;s.resources.shards+=m.reward;return true;
+ const m=missions(s).find(x=>x.id===id);if(!m||m.locked||s.claimed[id]||m.progress<m.goal)return false;
+ s.claimed[id]=true;if(typeof m.reward==='number')s.resources.shards+=m.reward;else for(const [resource,amount] of Object.entries(m.reward||{}))s.resources[resource]=(s.resources[resource]||0)+amount;return true;
 }
 export function claimAchievement(s,id){
  const a=achievements.find(x=>x.id===id);if(!a||s.claimed[id]||achievementProgress(s,a)<a.goal)return false;
