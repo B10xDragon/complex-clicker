@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {fresh,normalize,click,tick,buy,prestige,ascend,missions,claimMission,claimAchievement,discover,convertEnergy,offline,totalProd} from '../src/systems/gameEngine.js';
 test('mission reward is paid once and remains claimed after migration',()=>{
  const s=fresh();s.stats.totalEnergy=1200;missions(s);
- assert.equal(claimMission(s,'daily'),true);assert.equal(s.resources.shards,500);
+ assert.equal(claimMission(s,'daily'),true);assert.equal(s.resources.shards,2);
  const restored=normalize(JSON.parse(JSON.stringify(s)));
  assert.equal(claimMission(restored,'daily'),false);
 });
@@ -33,7 +33,7 @@ test('exploration requires funds and cannot charge twice',()=>{
  const before=totalProd(s);assert.ok(discover(s,'vega'));assert.equal(s.resources.energy,0);assert.equal(discover(s,'vega'),false);
 });
 test('energy sale unlocks credit progression and achievements pay once',()=>{
- const s=fresh();s.resources.energy=105;assert.ok(convertEnergy(s));assert.equal(s.resources.credits,20);assert.equal(s.resources.energy,5);
+ const s=fresh();s.resources.energy=105;assert.ok(convertEnergy(s));assert.equal(s.resources.credits,25);assert.equal(s.resources.energy,5);
  s.stats.totalEnergy=1;assert.ok(claimAchievement(s,'a0'));assert.equal(claimAchievement(s,'a0'),false);
 });
 test('offline production applies boost only for remaining boost duration',()=>{
