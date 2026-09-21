@@ -33,6 +33,12 @@ index.html
 ## Implemented systems
 
 Manual critical clicks, combo streaks, ten resource types, twelve scalable buildings, bulk buying, production/automation/conversion/offline upgrades, branching research, first and second prestige layers, galaxy map and expedition unlock, missions, achievements, statistics, events/logs, local save protection, keyboard/touch input, responsive iPad/mobile layout, and GitHub Pages-compatible static deployment.
+
+The tutorial route now has six ordered objectives: rebuild the starter generator,
+stabilize output, construct solar power, reach the first production milestone,
+complete Industrial Engineering, and discover Vega. Tutorial rewards directly add
+the currency needed for the next stage, while combo clicks grant slightly more
+credits so manual play accelerates the early economy.
 ## Galaxy progression (v7)
 
 Galaxy navigation unlocks through Space Exploration research or the Deep-space
