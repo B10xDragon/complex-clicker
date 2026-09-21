@@ -28,5 +28,20 @@ export const achievements=Array.from({length:30},(_,i)=>{
  const [name,type,base]=achievementTracks[i%10],tier=Math.floor(i/10),goal=base*(tier+1);
  return {id:'a'+i,name:name+(tier?' '+(tier+1):''),type,goal,desc:'Reach '+goal.toLocaleString('en-US')+' '+({energy:'lifetime energy',clicks:'total clicks',combo:'best combo',matter:'stored matter',research:'completed research nodes'}[type]||type+' building levels'),reward:1+i%4};
 });
-export const regions=[{id:'home',name:'Sol System',x:18,y:50,req:0,desc:'The birthplace of the empire.'},{id:'vega',name:'Vega Relay',x:43,y:27,req:1e5,desc:'A blue star rich in data.'},{id:'orion',name:'Orion Forge',x:68,y:55,req:1e7,desc:'Ancient industrial ruins.'},{id:'void',name:'The Silent Void',x:88,y:25,req:1e9,desc:'Dark energy anomalies.'}];
-
+export const regions=[
+ {id:'home',name:'Sol System',x:15,y:20,cost:0,desc:'The birthplace of the empire.'},
+ {id:'vega',name:'Vega Relay',x:38,y:20,parent:'home',cost:1000,prod:{data:.5},desc:'Signal collectors provide data for advanced systems.'},
+ {id:'orion',name:'Orion Forge',x:62,y:20,parent:'vega',cost:100000,prod:{matter:3},desc:'Ancient foundries supply industrial matter.'},
+ {id:'void',name:'The Silent Void',x:85,y:20,parent:'orion',cost:10000000,prod:{darkEnergy:.2},desc:'Stabilized anomalies supply dark energy.'},
+ {id:'sirius',name:'Sirius Archive',x:15,y:65,parent:'vega',cost:1000000,prod:{research:12},desc:'Stellar archives accelerate research.'},
+ {id:'rigel',name:'Rigel Nexus',x:38,y:65,parent:'sirius',cost:50000000,tech:'quantum',prod:{quantumCores:.05},desc:'Quantum relays manufacture computation cores.'},
+ {id:'andromeda',name:'Andromeda Gate',x:62,y:65,parent:'rigel',cost:500000000,tech:'matter',prod:{antimatter:1},desc:'Intergalactic collectors refine antimatter.'},
+ {id:'horizon',name:'Event Horizon',x:85,y:65,parent:'andromeda',cost:5000000000,tech:'galactic',prod:{knowledge:.005},desc:'A cosmic observatory slowly generates knowledge.'}
+];
+export const progressionMissions=[
+ ...[1000,100000,10000000].map((goal,i)=>({id:'grid-'+i,name:['Fusion grid','Stellar grid','Galactic grid'][i],desc:'Reach '+goal.toLocaleString('en-US')+' energy/s',metric:'output',goal,reward:3+i*3})),
+ ...[50,200,500].map((goal,i)=>({id:'builder-'+i,name:'Empire architect '+(i+1),desc:'Own '+goal+' building levels',metric:'buildings',goal,reward:2+i*2})),
+ ...[3,6,9].map((goal,i)=>({id:'science-'+i,name:'Scientific frontier '+(i+1),desc:'Complete '+goal+' research nodes',metric:'research',goal,reward:3+i*2})),
+ ...regions.slice(2).map((r,i)=>({id:'chart-'+r.id,name:'Chart '+r.name,desc:'Discover '+r.name,metric:r.id,goal:1,reward:2+i})),
+ {id:'outposts',name:'Connected colonies',desc:'Build 10 outpost levels',metric:'outposts',goal:10,reward:8}
+];
