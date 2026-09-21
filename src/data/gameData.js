@@ -37,6 +37,18 @@ export const regions=[
  {id:'rigel',name:'Rigel Nexus',x:38,y:65,parent:'sirius',cost:50000000,tech:'quantum',prod:{quantumCores:.05},desc:'Quantum relays manufacture computation cores.'},
  {id:'andromeda',name:'Andromeda Gate',x:62,y:65,parent:'rigel',cost:500000000,tech:'matter',prod:{antimatter:1},desc:'Intergalactic collectors refine antimatter.'},
  {id:'horizon',name:'Event Horizon',x:85,y:65,parent:'andromeda',cost:5000000000,tech:'galactic',prod:{knowledge:.005},desc:'A cosmic observatory slowly generates knowledge.'}
+ ,{id:'tarsis',name:'Tarsis Spiral',x:12,y:25,parent:'horizon',galaxy:'triangulum',cost:25000000000,prod:{research:80},desc:'A spiral observatory that maps parallel stellar histories.'}
+ ,{id:'lyra',name:'Lyra Bloom',x:37,y:25,parent:'tarsis',galaxy:'triangulum',cost:150000000000,prod:{data:30},desc:'A living nebula that turns starlight into data.'}
+ ,{id:'kepler',name:'Kepler Foundry',x:62,y:25,parent:'lyra',galaxy:'triangulum',cost:1000000000000,tech:'quantum',prod:{matter:250},desc:'A planet-sized fabrication lattice.'}
+ ,{id:'helix',name:'Helix Crown',x:87,y:25,parent:'kepler',galaxy:'triangulum',cost:10000000000000,tech:'galactic',prod:{darkEnergy:18},desc:'A rotating crown around a silent supermassive star.'}
+ ,{id:'aether',name:'Aether Basin',x:12,y:72,parent:'helix',galaxy:'perseus',cost:1e14,prod:{credits:12000},desc:'A cloud of programmable matter used for construction.'}
+ ,{id:'carina',name:'Carina Array',x:37,y:72,parent:'aether',galaxy:'perseus',cost:1e15,prod:{energy:500000},desc:'A light-harvesting array spanning a stellar nursery.'}
+ ,{id:'phoenix',name:'Phoenix Vault',x:62,y:72,parent:'carina',galaxy:'perseus',cost:1e16,tech:'matter',prod:{antimatter:80},desc:'A stable vault containing reversed stellar fuel.'}
+ ,{id:'atlas',name:'Atlas Engine',x:87,y:72,parent:'phoenix',galaxy:'perseus',cost:1e17,tech:'galactic',prod:{quantumCores:8},desc:'The engine that holds a galaxy web in alignment.'}
+ ,{id:'umbra',name:'Umbra Field',x:12,y:48,parent:'atlas',galaxy:'deepfield',cost:1e18,prod:{darkEnergy:300},desc:'A field beyond ordinary light.'}
+ ,{id:'zenith',name:'Zenith Observatory',x:37,y:48,parent:'umbra',galaxy:'deepfield',cost:1e19,prod:{research:10000},desc:'A telescope aimed outside the known simulation.'}
+ ,{id:'origin',name:'Origin Engine',x:62,y:48,parent:'zenith',galaxy:'deepfield',cost:1e20,tech:'quantum',prod:{knowledge:1},desc:'A machine that reconstructs the first moments of a universe.'}
+ ,{id:'infinity',name:'Infinity Gate',x:87,y:48,parent:'origin',galaxy:'deepfield',cost:1e21,tech:'galactic',prod:{energy:1e9,knowledge:.1},desc:'The final visible gate into an endlessly expanding frontier.'}
 ];
 export const progressionMissions=[
  ...[1000,100000,10000000].map((goal,i)=>({id:'grid-'+i,name:['Fusion grid','Stellar grid','Galactic grid'][i],desc:'Reach '+goal.toLocaleString('en-US')+' energy/s',metric:'output',goal,reward:3+i*3})),
@@ -44,4 +56,24 @@ export const progressionMissions=[
  ...[3,6,9].map((goal,i)=>({id:'science-'+i,name:'Scientific frontier '+(i+1),desc:'Complete '+goal+' research nodes',metric:'research',goal,reward:3+i*2})),
  ...regions.slice(2).map((r,i)=>({id:'chart-'+r.id,name:'Chart '+r.name,desc:'Discover '+r.name,metric:r.id,goal:1,reward:2+i})),
  {id:'outposts',name:'Connected colonies',desc:'Build 10 outpost levels',metric:'outposts',goal:10,reward:8}
+];
+export const galaxies=[
+ {id:'local',name:'Local Group',tone:'cyan',desc:'The first web of connected systems.',regions:['home','vega','orion','void','sirius','rigel','andromeda','horizon']},
+ {id:'triangulum',name:'Triangulum Reach',tone:'violet',desc:'A spiral of unstable research worlds.',regions:['tarsis','lyra','kepler','helix']},
+ {id:'perseus',name:'Perseus Veil',tone:'orange',desc:'Ancient industrial galaxies hidden behind a dust wall.',regions:['aether','carina','phoenix','atlas']},
+ {id:'deepfield',name:'Deep Field',tone:'pink',desc:'The edge of the observable network.',regions:['umbra','zenith','origin','infinity']}
+];
+export const galaxySkills=[
+ {id:'nav1',tree:'Navigation',name:'Stellar Cartography',cost:5,req:[],max:25,value:.01,desc:'+1% production per level from mapped systems.'},
+ {id:'nav2',tree:'Navigation',name:'Wormhole Geometry',cost:12,req:['nav1'],max:25,value:.015,desc:'Reduces every discovery energy cost by 1.5% per level.'},
+ {id:'nav3',tree:'Navigation',name:'Survey Fleet',cost:25,req:['nav2'],max:25,value:.02,desc:'Outposts produce 2% more per level.'},
+ {id:'nav4',tree:'Navigation',name:'Horizon Scanner',cost:50,req:['nav3'],max:25,value:.03,desc:'Unlocks the next frontier of the galaxy web.'},
+ {id:'ind1',tree:'Industry',name:'Outpost Logistics',cost:5,req:[],max:25,value:.02,desc:'Outpost upgrade costs fall by 2% per level.'},
+ {id:'ind2',tree:'Industry',name:'Distributed Fabrication',cost:12,req:['ind1'],max:25,value:.015,desc:'+1.5% credits and matter production per level.'},
+ {id:'ind3',tree:'Industry',name:'Star Foundries',cost:25,req:['ind2'],max:25,value:.025,desc:'+2.5% total production per level.'},
+ {id:'ind4',tree:'Industry',name:'Megastructure Loop',cost:50,req:['ind3'],max:25,value:.04,desc:'Frontier mastery gives 4% more production per level.'},
+ {id:'asc1',tree:'Ascension',name:'Memory Lattice',cost:8,req:[],max:25,value:.01,desc:'+1% cosmic knowledge production per level.'},
+ {id:'asc2',tree:'Ascension',name:'Shard Resonance',cost:16,req:['asc1'],max:25,value:.02,desc:'Prestige shard multiplier grows 2% per level.'},
+ {id:'asc3',tree:'Ascension',name:'Recursive Reality',cost:32,req:['asc2'],max:25,value:.03,desc:'Offline progress gains 3% per level.'},
+ {id:'asc4',tree:'Ascension',name:'Infinite Archive',cost:64,req:['asc3'],max:25,value:.05,desc:'Every skill level improves all other skill effects by 5%.'}
 ];
