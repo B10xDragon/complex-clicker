@@ -150,6 +150,6 @@ test('prestige milestones and optional opportunities are deterministic',()=>{
 test('clicking upgrades form a gated energy-per-click progression',()=>{
  const s=fresh();s.resources.energy=1e6;s.resources.credits=1e6;s.resources.research=1e6;s.resources.data=1e6;
  assert.equal(buyUpgrade(s,'click-amplifier'),false);
- assert.ok(buyUpgrade(s,'capacitors'));assert.ok(buyUpgrade(s,'click-amplifier'));assert.ok(buyUpgrade(s,'click-lens'));assert.ok(buyUpgrade(s,'stellar-pulse'));
+ assert.ok(buyUpgrade(s,'capacitors'));assert.ok(buyUpgrade(s,'core-relay-network'));assert.ok(buyUpgrade(s,'click-amplifier'));assert.ok(buyUpgrade(s,'click-lens'));assert.ok(buyUpgrade(s,'stellar-pulse'));
  const result=click(s);assert.ok(result.amount>20);assert.equal(buyUpgrade(s,'click-lens'),false);
 });
