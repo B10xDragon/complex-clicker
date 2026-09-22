@@ -2,7 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {regions,galaxyTypes} from '../src/data/gameData.js';
 import {discoveryStatus,outpostStatus,upgradeOutpost,skillStatus,upgradeSkill,frontierStatus,advanceFrontier,galaxyBoosts} from '../src/systems/exploration.js';
-import {fresh,normalize,click,tick,buy,prestige,ascend,missions,claimMission,claimAchievement,discover,convertEnergy,offline,totalProd} from '../src/systems/gameEngine.js';
+import {fresh,normalize,click,tick,buy,buyUpgrade,prestige,ascend,missions,claimMission,claimAchievement,discover,convertEnergy,offline,totalProd} from '../src/systems/gameEngine.js';
 import {starterCosmicNodes,cosmicNodes} from '../src/systems/cosmicEngine.js';
 import {chooseStarter,buyCosmic,cosmicStatus} from '../src/systems/cosmicEngine.js';
 import {colonize,specializeColony,setGovernment,togglePolicy,diplomacyAction,buildFleet,resolveWar,buildMega,militaryPower} from '../src/systems/civilization.js';
@@ -146,4 +146,10 @@ test('building milestones and synergies activate without invalid production',()=
 test('prestige milestones and optional opportunities are deterministic',()=>{
  const s=fresh();s.stats.prestiges=2;assert.equal(prestigeBenefits(s).manual,2);assert.equal(prestigeBenefits(s).credits,100);
  assert.ok(startOpportunity(s,'solar-surge'));assert.equal(opportunityStatus(s).id,'solar-surge');assert.equal(startOpportunity(s,'research-window'),false);
+});
+test('clicking upgrades form a gated energy-per-click progression',()=>{
+ const s=fresh();s.resources.energy=1e6;s.resources.credits=1e6;s.resources.research=1e6;s.resources.data=1e6;
+ assert.equal(buyUpgrade(s,'click-amplifier'),false);
+ assert.ok(buyUpgrade(s,'capacitors'));assert.ok(buyUpgrade(s,'click-amplifier'));assert.ok(buyUpgrade(s,'click-lens'));assert.ok(buyUpgrade(s,'stellar-pulse'));
+ const result=click(s);assert.ok(result.amount>20);assert.equal(buyUpgrade(s,'click-lens'),false);
 });
