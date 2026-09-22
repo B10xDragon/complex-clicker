@@ -69,7 +69,7 @@ export function missions(s){
  if(s.dailyDate!==date){s.dailyStart=s.dailyDate?s.stats.totalEnergy:0;s.dailyDate=date;delete s.claimed.daily;}
  const tutorial=[...tutorialMissions].map((m,i)=>({...m,progress:m.metric==='output'?totalProd(s).energy||0:m.metric==='research'?Object.keys(s.research).length:m.metric==='industrial'?(s.research.industrial?1:0):m.metric==='vega'?s.exploration.regions.vega||0:s.buildings[m.metric]||0,locked:i>0&&!s.claimed[tutorialMissions[i-1].id]}));
  const civ= s.stats.ascensions>0 ? civilizationDirectives.map(m=>({...m,progress:directiveProgress(s,m.metric),locked:false})) : [];
- return [
+ const all=[
  ...tutorial,
  {id:'daily',name:'Daily pulse',desc:'Generate 1,000 energy today (resets at 00:00 UTC)',goal:1000,progress:Math.max(0,s.stats.totalEnergy-s.dailyStart),reward:2},
  {id:'objective',name:'Architect’s path',desc:'Own 10 buildings',goal:10,progress:Object.values(s.buildings).reduce((a,b)=>a+b,0),reward:1},
@@ -77,6 +77,8 @@ export function missions(s){
  ...progressionMissions.map(m=>({...m,progress:({output:totalProd(s).energy||0,buildings:Object.values(s.buildings).reduce((a,b)=>a+b,0),research:Object.keys(s.research).length,outposts:Object.values(s.exploration.outposts||{}).reduce((a,b)=>a+b,0)})[m.metric]??s.exploration.regions[m.metric]??0}))
  ,...civ
  ];
+ const rank=m=>!m.locked&&!s.claimed[m.id]&&m.progress>=m.goal?0:1;
+ return all.sort((a,b)=>rank(a)-rank(b));
 }
 export function claimMission(s,id){
  const m=missions(s).find(x=>x.id===id);if(!m||m.locked||s.claimed[id]||m.progress<m.goal)return false;
