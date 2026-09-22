@@ -3,6 +3,7 @@ export const resources=[
 ];
 export const buildings=[
  {id:'manual',name:'Manual Generator',tag:'MK-I',base:15,scale:1.14,prod:{energy:0.2,credits:0.05},unlock:0,desc:'A compact hand-tuned induction coil.'},
+ {id:'clicking',name:'Clicking Upgrades',tag:'MANUAL',base:100,scale:1.18,prod:{},clickPower:1,unlock:25,desc:'A repeatable reactor interface that adds +1 energy per click per level.'},
  {id:'solar',name:'Solar Array',tag:'ORBITAL',base:80,scale:1.15,prod:{energy:2.2,credits:0.2},unlock:50,desc:'Collects stellar photons across a wide orbital plane.',bonus:'Solar arrays amplify manual generators by 2% per level.'},
  {id:'mining',name:'Mining Drones',tag:'EXTRACTION',base:300,scale:1.16,prod:{matter:0.35,credits:0.2},unlock:250,desc:'Autonomous drones harvest asteroid belts.'},
  {id:'fusion',name:'Fusion Reactor',tag:'CORE',base:1200,scale:1.17,prod:{energy:28},unlock:1000,desc:'Turns matter into stable high-yield energy.',bonus:'Every 10 levels grants +5% total production.'},
