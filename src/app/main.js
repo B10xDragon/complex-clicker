@@ -75,7 +75,7 @@ function frontierDestinationMarkup(){
 function centerGalaxyMap(){const viewport=document.querySelector('.galaxy-map-viewport');if(!viewport)return;requestAnimationFrame(()=>{viewport.scrollLeft=Math.max(0,(viewport.scrollWidth-viewport.clientWidth)/2);viewport.scrollTop=Math.max(0,(viewport.scrollHeight-viewport.clientHeight)/2);});}
 new MutationObserver(()=>{frontierDestinationMarkup();centerGalaxyMap();}).observe(app,{childList:true,subtree:true});
 document.addEventListener('click',e=>{const region=e.target.closest('[data-region]');if(region){const ok=discover(state,region.dataset.region);notify(ok?'Galaxy discovered — frontier expanded':'Cannot discover yet: '+discoveryStatus(state,region.dataset.region).label);save(state);render();}});
-function clickPower(){return 1+Object.values(state.upgrades).filter(u=>u?.effect==='clickFlat').reduce((sum,u)=>sum+Math.max(0,Number(u.value)||0),0)}
+function clickPower(){return 1+(state.buildings?.clicking||0)+Object.values(state.upgrades).filter(u=>u?.effect==='clickFlat').reduce((sum,u)=>sum+Math.max(0,Number(u.value)||0),0)}
 function refreshGalaxy(){
  document.querySelectorAll('[data-region]').forEach(btn=>{const status=discoveryStatus(state,btn.dataset.region);btn.disabled=!status.ok;btn.textContent=status.label;});
  document.querySelectorAll('[data-outpost]').forEach(btn=>{const status=outpostStatus(state,btn.dataset.outpost);btn.disabled=!status.ok;btn.textContent=status.level>=10?'MAXIMUM LEVEL':status.ok?'UPGRADE OUTPOST':'NEEDS CREDITS / MATTER';});
