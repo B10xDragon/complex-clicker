@@ -157,3 +157,12 @@ test('clicking upgrades form a gated energy-per-click progression',()=>{
  assert.ok(buyUpgrade(s,'capacitors'));assert.ok(buyUpgrade(s,'core-relay-network'));assert.ok(buyUpgrade(s,'click-amplifier'));assert.ok(buyUpgrade(s,'click-lens'));assert.ok(buyUpgrade(s,'stellar-pulse'));
  const result=click(s);assert.ok(result.amount>20);assert.equal(buyUpgrade(s,'click-lens'),false);
 });
+test('late clicking upgrades remain gated and add substantial direct output',()=>{
+ const s=fresh();Object.assign(s.resources,{energy:1e12,credits:1e12,research:1e9,data:1e9,quantumCores:1e5,darkEnergy:1e5});
+ assert.equal(buyUpgrade(s,'quantum-tap'),false);for(const id of ['capacitors','click-amplifier','click-lens','stellar-pulse'])assert.ok(buyUpgrade(s,id));
+ assert.ok(buyUpgrade(s,'quantum-tap'));assert.ok(buyUpgrade(s,'infinite-loop'));assert.ok(buyUpgrade(s,'singularity-touch'));assert.ok(click(s).amount>1000);
+});
+test('the generated galaxy web exposes multiple affordable starter choices',()=>{
+ const s=fresh();s.research.exploration={};s.resources.energy=1e5;
+ const choices=regions.filter(r=>r.parent==='home'&&!s.exploration.regions[r.id]);assert.ok(choices.length>=4);assert.ok(choices.every(r=>r.cost<=1e5));assert.ok(choices.every(r=>r.type&&galaxyTypes.some(t=>t.id===r.type)));
+});
