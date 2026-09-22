@@ -1,8 +1,8 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {regions,galaxyTypes} from '../src/data/gameData.js';
+import {regions,galaxyTypes,buildings} from '../src/data/gameData.js';
 import {discoveryStatus,outpostStatus,upgradeOutpost,skillStatus,upgradeSkill,frontierStatus,advanceFrontier,galaxyBoosts} from '../src/systems/exploration.js';
-import {fresh,normalize,click,tick,buy,buyUpgrade,prestige,ascend,missions,claimMission,claimAchievement,discover,convertEnergy,offline,totalProd} from '../src/systems/gameEngine.js';
+import {fresh,normalize,click,tick,buy,buyUpgrade,prestige,ascend,missions,claimMission,claimAchievement,discover,convertEnergy,offline,totalProd,cost} from '../src/systems/gameEngine.js';
 import {starterCosmicNodes,cosmicNodes} from '../src/systems/cosmicEngine.js';
 import {chooseStarter,buyCosmic,cosmicStatus} from '../src/systems/cosmicEngine.js';
 import {colonize,specializeColony,setGovernment,togglePolicy,diplomacyAction,buildFleet,resolveWar,buildMega,militaryPower} from '../src/systems/civilization.js';
@@ -25,6 +25,10 @@ test('bulk purchase matches individual costs and blocks invalid purchases',()=>{
  const a=fresh(),b=fresh();a.resources.credits=b.resources.credits=10000;
  assert.equal(buy(a,'manual',10),10);for(let i=0;i<10;i++)buy(b,'manual',1);
  assert.equal(a.resources.credits,b.resources.credits);assert.equal(buy(a,'unknown',1),0);assert.equal(buy(a,'manual',-1),0);assert.equal(buy(a,'galactic',1),0);
+});
+test('clicking upgrades building scales like a normal infrastructure building',()=>{
+ const s=fresh();s.resources.credits=1000;assert.equal(buy(s,'clicking',3),3);assert.equal(s.buildings.clicking,3);
+ const result=click(s);assert.ok(result.amount>=4);assert.ok(buy(s,'clicking',1)>=0);assert.ok(cost(buildings.find(b=>b.id==='clicking'),s.buildings.clicking)>100);
 });
 test('prestige retains lifetime history and technologies',()=>{
  const s=fresh();s.resources.energy=1e6;s.stats.prestiges=2;s.stats.clicks=100;s.research.industrial={value:.1};
