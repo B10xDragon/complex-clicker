@@ -5,7 +5,7 @@ import {discoveryStatus,outpostStatus,upgradeOutpost,skillStatus,upgradeSkill,fr
 import {fresh,normalize,click,tick,buy,buyUpgrade,prestige,ascend,missions,claimMission,claimAchievement,discover,convertEnergy,offline,totalProd,cost} from '../src/systems/gameEngine.js';
 import {starterCosmicNodes,cosmicNodes} from '../src/systems/cosmicEngine.js';
 import {chooseStarter,buyCosmic,cosmicStatus} from '../src/systems/cosmicEngine.js';
-import {colonize,specializeColony,setGovernment,togglePolicy,diplomacyAction,buildFleet,resolveWar,buildMega,militaryPower} from '../src/systems/civilization.js';
+import {buildMega,megaBonuses,startChallenge,endChallenge,challengeProgress,advanceEntropy,ascensionRequirements,universeScale} from '../src/systems/incremental.js';
 import {currentEra,nextBreakthroughs,buildingMilestone,prestigeBenefits,startOpportunity,opportunityStatus} from '../src/systems/progression.js';
 test('mission reward is paid once and remains claimed after migration',()=>{
  const s=fresh();s.stats.totalEnergy=1200;missions(s);
@@ -37,10 +37,10 @@ test('prestige retains lifetime history and technologies',()=>{
 test('galaxy skills and frontier persist through prestige and ascension',()=>{
  const s=fresh();s.resources.energy=1e6;s.resources.knowledge=4;s.exploration.skills.nav1=2;s.exploration.frontier=3;
  assert.ok(prestige(s));assert.equal(s.exploration.skills.nav1,2);assert.equal(s.exploration.frontier,3);
- s.research.galactic={};s.resources.shards=100;assert.ok(ascend(s));assert.equal(s.exploration.skills.nav1,2);assert.equal(s.exploration.frontier,3);
+ s.research.galactic={};s.resources.shards=100;s.resources.energy=1e8;s.resources.research=2e5;s.exploration.regions.vega=1;assert.ok(ascend(s));assert.equal(s.exploration.skills.nav1,2);assert.equal(s.exploration.frontier,3);
 });
 test('ascension resets the first layer',()=>{
- const s=fresh();s.research.galactic={};s.resources.shards=100;s.buildings.manual=20;
+ const s=fresh();s.research.galactic={};s.resources.shards=100;s.resources.energy=1e8;s.resources.research=2e5;s.exploration.regions.vega=1;s.buildings.manual=20;
  assert.ok(ascend(s));assert.equal(s.resources.knowledge,1);assert.equal(s.resources.shards,0);assert.equal(s.buildings.manual,0);
 });
 test('exploration requires funds and cannot charge twice',()=>{
@@ -111,31 +111,23 @@ test('new progression missions reward milestones once',()=>{
 test('tutorial quests guide the early currency loop and unlock in order',()=>{
  const s=fresh();assert.equal(missions(s)[0].id,'tutorial-1');assert.equal(claimMission(s,'tutorial-1'),false);
  assert.equal(buy(s,'manual',1),1);assert.equal(claimMission(s,'tutorial-1'),true);assert.equal(s.resources.credits,25);
- assert.equal(missions(s)[1].locked,false);s.buildings.manual=5;assert.equal(claimMission(s,'tutorial-2'),true);assert.equal(s.resources.research,25);
- assert.equal(missions(s)[2].locked,false);assert.equal(claimMission(s,'tutorial-2'),false);
+ assert.equal(missions(s).find(m=>m.id==='tutorial-2').locked,false);s.buildings.manual=5;assert.equal(claimMission(s,'tutorial-2'),true);assert.equal(s.resources.research,25);
+ assert.equal(missions(s).find(m=>m.id==='tutorial-3').locked,false);assert.equal(claimMission(s,'tutorial-2'),false);
 });
 test('first ascension unlocks exactly one starter cosmic choice',()=>{
- const s=fresh();s.research.galactic={};s.resources.shards=100;assert.ok(ascend(s));
+ const s=fresh();s.research.galactic={};s.resources.shards=100;s.resources.energy=1e8;s.resources.research=2e5;s.exploration.regions.vega=1;assert.ok(ascend(s));
  assert.equal(s.stats.ascensions,1);assert.equal(s.resources.knowledge,1);assert.equal(starterCosmicNodes.length,5);
  assert.ok(chooseStarter(s,starterCosmicNodes[0].id));assert.equal(Object.keys(s.cosmic.purchased).length,1);
  assert.equal(chooseStarter(s,starterCosmicNodes[1].id),false);assert.equal(buyCosmic(s,starterCosmicNodes[1].id),false);
  assert.equal(cosmicStatus(s,cosmicNodes.find(n=>n.branch===starterCosmicNodes[0].branch&&n.tier===1).id).ok,false);
 });
-test('old saves migrate with cosmic and civilization defaults without losing progress',()=>{
- const old=fresh();old.resources.energy=98765;old.stats.clicks=42;delete old.cosmic;delete old.civilization;
- const restored=normalize(JSON.parse(JSON.stringify(old)));assert.equal(restored.resources.energy,98765);assert.equal(restored.stats.clicks,42);assert.ok(restored.cosmic);assert.ok(restored.civilization);assert.equal(restored.civilization.unlocked,false);
-});
-test('civilization colonies, specialization and government interact with progression',()=>{
- const s=fresh();s.stats.ascensions=1;s.cosmic={unlocked:true,firstChoice:'cosmic-civilization-0',purchased:{'cosmic-civilization-0':1}};s.civilization.unlocked=true;s.exploration.regions.vega=1;s.resources.credits=1e8;s.resources.culture=100;
- assert.ok(colonize(s,'vega'));assert.ok(s.civilization.colonies.vega);assert.ok(specializeColony(s,'vega','research'));assert.ok(setGovernment(s,'directorate'));assert.ok(togglePolicy(s,'open-science'));tick(s,10);assert.ok(s.civilization.population>0);assert.ok(totalProd(s).research>=0);
-});
-test('diplomacy, fleets and strategic war resolve through the engine',()=>{
- const s=fresh();s.stats.ascensions=1;s.civilization.unlocked=true;s.resources.credits=1000;s.resources.matter=1e6;
- assert.ok(diplomacyAction(s,'civ-0','contact'));assert.ok(diplomacyAction(s,'civ-0','war'));assert.ok(buildFleet(s,'battleship',10));assert.ok(militaryPower(s)>0);assert.ok(resolveWar(s,'civ-0'));assert.equal(s.civilization.wars.length,0);
+test('old saves migrate cosmic and megastructures without losing progress',()=>{
+ const old=fresh();old.resources.energy=98765;old.stats.clicks=42;delete old.cosmic;old.civilization={megastructures:{'planetary-computer':2}};
+ const restored=normalize(JSON.parse(JSON.stringify(old)));assert.equal(restored.resources.energy,98765);assert.equal(restored.stats.clicks,42);assert.ok(restored.cosmic);assert.equal(restored.megastructures['planetary-computer'],2);assert.equal(restored.civilization,undefined);
 });
 test('multi-stage megastructures scale costs and preserve stage progress',()=>{
- const s=fresh();s.stats.ascensions=1;s.civilization.unlocked=true;s.resources.energy=1e20;s.resources.research=1e20;s.resources.matter=1e20;
- assert.ok(buildMega(s,'planetary-computer'));assert.equal(s.civilization.megastructures['planetary-computer'],1);assert.ok(buildMega(s,'planetary-computer'));assert.equal(s.civilization.megastructures['planetary-computer'],2);assert.ok(buildMega(s,'planetary-computer'));assert.equal(s.civilization.megastructures['planetary-computer'],3);assert.equal(buildMega(s,'planetary-computer'),false);
+ const s=fresh();s.stats.ascensions=1;s.resources.energy=1e20;s.resources.research=1e20;s.resources.matter=1e20;
+ assert.ok(buildMega(s,'planetary-computer'));assert.equal(s.megastructures['planetary-computer'],1);assert.ok(buildMega(s,'planetary-computer'));assert.equal(s.megastructures['planetary-computer'],2);assert.ok(buildMega(s,'planetary-computer'));assert.equal(s.megastructures['planetary-computer'],3);assert.equal(buildMega(s,'planetary-computer'),false);assert.ok(megaBonuses(s).research>0);
 });
 test('progression defaults migrate and eras expose the next meaningful goals',()=>{
  const s=fresh();delete s.progression;const restored=normalize(JSON.parse(JSON.stringify(s)));
@@ -165,4 +157,23 @@ test('late clicking upgrades remain gated and add substantial direct output',()=
 test('the generated galaxy web exposes multiple affordable starter choices',()=>{
  const s=fresh();s.research.exploration={};s.resources.energy=1e5;
  const choices=regions.filter(r=>r.parent==='home'&&!s.exploration.regions[r.id]);assert.ok(choices.length>=4);assert.ok(choices.every(r=>r.cost<=1e5));assert.ok(choices.every(r=>r.type&&galaxyTypes.some(t=>t.id===r.type)));
+});
+test('ascension scales requirements and permanent click bonuses survive prestige',()=>{
+ const s=fresh();s.stats.ascensions=1;s.cosmic.purchased['cosmic-warfare-0']=1;s.cosmic.firstChoice='cosmic-warfare-0';
+ assert.ok(ascensionRequirements(s).energy>ascensionRequirements(fresh()).energy);
+ assert.ok(click(s).amount>1);s.resources.energy=1e6;assert.ok(prestige(s));assert.equal(s.cosmic.purchased['cosmic-warfare-0'],1);
+ assert.ok(cost(buildings.find(b=>b.id==='manual'),0,s)>cost(buildings.find(b=>b.id==='manual'),0,fresh()));
+});
+test('optional challenges have meaningful modifiers and permanent rewards',()=>{
+ const s=fresh();s.stats.ascensions=1;s.buildings.manual=1;
+ assert.ok(startChallenge(s,'drought'));assert.equal(startChallenge(s,'compression'),false);
+ const reduced=totalProd(s).energy;s.challenge.active=null;assert.ok(totalProd(s).energy>reduced);
+ s.challenge.active='drought';s.stats.totalEnergy=s.challenge.startEnergy+1e6;
+ assert.ok(challengeProgress(s)>=1e6);assert.ok(endChallenge(s,true));assert.ok(totalProd(s).energy>reduced);
+ const restored=normalize(JSON.parse(JSON.stringify(s)));assert.equal(restored.challenge.completed.drought,true);
+});
+test('entropy is gated by Ascension III and offline progress never collapses',()=>{
+ const s=fresh();assert.equal(advanceEntropy(s,1e9),false);s.stats.ascensions=3;
+ assert.equal(advanceEntropy(s,1e9,{offline:true}),false);assert.ok(s.entropy<100);
+ assert.equal(advanceEntropy(s,1e9),true);
 });
