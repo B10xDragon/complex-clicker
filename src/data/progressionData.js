@@ -6,8 +6,9 @@ export const eras=[
  {id:'interstellar',name:'Interstellar Age',desc:'The question is no longer how much—but where.',minEnergy:1e6,minGalaxy:2,minResearch:5},
  {id:'galactic',name:'Galactic Industry',desc:'Dyson infrastructure and exotic production reshape the economy.',minEnergy:2e8,minGalaxy:8,minResearch:7},
  {id:'prestige',name:'Prestige',desc:'Reset the run to accelerate every future empire.',minPrestige:1},
- {id:'ascendant',name:'Ascendant Civilization',desc:'Cosmic Knowledge opens civilization-scale strategy.',minAscension:1},
- {id:'galactic-age',name:'Galactic Age',desc:'A mature civilization prepares for council, crises, and deeper mysteries.',minAscension:1,minColonies:3,minTrade:1,minMega:1}
+ {id:'ascendant',name:'Ascendant Universe',desc:'Cosmic Knowledge opens permanent incremental upgrades.',minAscension:1},
+ {id:'galactic-age',name:'Megastructure Age',desc:'Great projects multiply production across the mapped galaxy web.',minAscension:1,minMega:1},
+ {id:'entropy-age',name:'Entropy Age',desc:'After three Ascensions, keep expanding before entropy reaches its limit.',minAscension:3,minMega:1}
 ];
 export const buildingMilestones={
  manual:{10:{production:.06,label:'Induction rhythm'},25:{production:.1,label:'Parallel coils'},50:{production:.18,label:'Self-tuning generators'},100:{production:.35,label:'Manual mastery'}},
@@ -16,7 +17,7 @@ export const buildingMilestones={
  fusion:{10:{production:.08,label:'Stable plasma'},25:{energy:.12,label:'Magnetic compression'},50:{production:.18,label:'Fusion cascade'},100:{production:.35,label:'Star-core reactors'}},
  lab:{10:{research:.1,label:'Peer review network'},25:{data:.15,label:'Experimental archive'},50:{research:.2,label:'Breakthrough method'},100:{production:.3,label:'Research mastery'}},
  orbital:{10:{industry:.1,label:'Microgravity tooling'},25:{matter:.15,label:'Factory routing'},50:{production:.18,label:'Orbital logistics'},100:{production:.32,label:'Industrial mastery'}},
- colony:{10:{population:.12,label:'Civic foundations'},25:{culture:.15,label:'World identity'},50:{production:.2,label:'Planetary specialization'},100:{production:.34,label:'Colony mastery'}},
+ colony:{10:{credits:.12,label:'Planetary logistics'},25:{data:.15,label:'World archives'},50:{production:.2,label:'Network specialization'},100:{production:.34,label:'Colony mastery'}},
  dyson:{10:{energy:.12,label:'Collector alignment'},25:{production:.16,label:'Stellar routing'},50:{energy:.25,label:'Swarm coordination'},100:{production:.4,label:'Dyson mastery'}},
  quantum:{10:{research:.12,label:'Parallel cognition'},25:{data:.18,label:'Probability engines'},50:{production:.24,label:'Quantum logistics'},100:{production:.4,label:'Quantum mastery'}},
  wormhole:{10:{production:.12,label:'Stable apertures'},25:{antimatter:.18,label:'Transit extraction'},50:{production:.25,label:'Network shortcuts'},100:{production:.42,label:'Wormhole mastery'}},
@@ -43,7 +44,7 @@ export const civilizationDirectives=[
 export const opportunities=[
  {id:'solar-surge',name:'Solar Surge',desc:'Solar Arrays produce 3× energy for 90 seconds.',duration:90,effect:{solar:3}},
  {id:'research-window',name:'Research Breakthrough',desc:'Research Labs produce 2× research for 120 seconds.',duration:120,effect:{lab:2}},
- {id:'trade-boom',name:'Trade Boom',desc:'Trade routes generate 2× credits for 120 seconds.',duration:120,effect:{trade:2}},
+ {id:'forge-boom',name:'Forge Boom',desc:'Orbital Factories generate 2× resources for 120 seconds.',duration:120,effect:{orbital:2}},
  {id:'exploration-window',name:'Exploration Window',desc:'Galaxy discovery costs 50% less for 90 seconds.',duration:90,effect:{exploration:.5}}
 ];
 export const balance={
