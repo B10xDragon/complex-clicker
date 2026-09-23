@@ -89,7 +89,7 @@ setInterval(()=>{
  tick(state,Math.max(0,Math.min((now-last)/1000,60)));last=now;
  hudTicks++;
  try{refreshHUD()}catch(error){console.error('Starforge HUD refresh failed',error)}
- 
+
  if(now-saved>=10000){save(state);saved=now}
 },250);
 document.addEventListener('visibilitychange',()=>{if(document.hidden){save(state)}else{offline(state);last=Date.now();render()}});
