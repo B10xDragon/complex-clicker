@@ -67,54 +67,32 @@ src/systems/exploration.js; destination, galaxy and skill definitions are in
 src/data/gameData.js. Run regression checks with
 `node --test tests/regressions.test.js` and build with `npm run build`.
 
-## Civilization expansion (v8)
+## Incremental Ascension expansion (v10)
 
-The first true Ascension now unlocks the civilization era. A first Ascension awards
-one Cosmic Knowledge and exposes five starter awakenings; only one can be chosen.
-The permanent Cosmic Knowledge Tree contains 120 data-driven nodes across
-Expansion, Industry, Science, Civilization, Warfare, and a hidden Transcendence
-branch. Later branches require purchased prerequisites and later Ascensions.
+The first Ascension requires Galactic Infrastructure, 100 prestige shards, 10 million
+energy, 150,000 research and two mapped galaxies. Requirements grow by 2.2× per
+Ascension; construction and discovery costs scale with the universe.
+The first Ascension grants exactly one Cosmic Knowledge to choose one of five
+starting skills. Other starter branches unlock after the second Ascension.
 
-After Ascension, the game adds population, housing, employment, happiness, stability,
-education, culture, administrative capacity, colony specialization, governments, and
-policies. Mapped galaxies can become colonies with specializations such as research,
-industrial, fortress, trade, mining, energy, administrative, shipyard, and quantum
-worlds. These bonuses include tradeoffs such as energy demand, slower growth, or
-reduced happiness.
+The permanent 119-node Cosmic Knowledge Tree has Expansion, Industry, Science,
+Automation, Energy and Transcendence branches. Bonuses affect galaxy exploration,
+production, research, offline production, manual clicking and entropy resistance.
+Six multi-stage megastructures provide permanent production, research, exploration,
+outpost and entropy effects. Three optional, deterministic Ascension challenges
+change the current run's rules and grant permanent completion bonuses.
 
-The civilization layer also includes procedurally generated civilizations with
-different personalities and strategic goals, diplomacy actions, relationship values,
-trade charters, a strategic fleet system, seven ship classes, war objectives and
-resolution, and multi-stage megastructures. The simulation is aggregated and ticked
-with the existing browser loop rather than updating every colony or ship each frame.
+After the third Ascension, entropy rises during active play. Complete the next
+Ascension before reaching 100 to start another universe; a collapse resets the
+current run while retaining permanent cosmic progression. Offline progress cannot
+trigger collapse. The 250 typed galaxies remain connected, with fog hiding distant
+branches. Old civilization-era saves migrate their megastructure stages, preserving
+resources, buildings, mapped galaxies, upgrades, achievements and statistics.
+Civilization, diplomacy, trade and fleets are no longer active gameplay screens.
 
-Old saves receive safe defaults for Cosmic Knowledge and civilization state, and
-their existing resources, research, buildings, discoveries, skills, and statistics
-are retained. Expansion regression coverage includes first Ascension choice
-exclusivity, migration, colonies, diplomacy, fleets, warfare, and megastructure
-stages.
-
-## Progression expansion (v9)
-
-The progression layer now presents nine readable eras from Spark through Galactic
-Age. Each era is calculated from actual lifetime energy, buildings, research,
-exploration, prestige, colonies, trade, and megastructure progress, so the next
-step is always visible in the dashboard's Next Breakthroughs panel.
-
-Buildings now have milestone rewards at levels 10, 25, 50, and 100, with distinct
-effects per building. Cross-building synergies reward balanced networks: solar
-arrays improve manual generators, orbital factories reinforce mining, laboratories
-and quantum computers amplify each other, and Dyson/galactic infrastructure form a
-late-game production loop. Prestige milestones add persistent acceleration,
-automation memory, starting infrastructure, and improved reward scaling.
-
-Optional opportunities such as Solar Surge, Research Breakthrough, Trade Boom, and
-Exploration Window create short, deterministic bursts of activity with cooldowns;
-they are never gambling or real-money mechanics. The progression journal records
-first clicks, purchases, automation, research, era changes, prestige, and Ascension
-milestones. Old saves receive the new progression defaults automatically, and the
-expanded test suite covers migration, milestones, finite long simulations,
-prestige benefits, and opportunity cooldown behavior.
+Buildings award milestones at levels 10, 25, 50 and 100 and have cross-building
+synergies. Deterministic timed opportunities, daily and tutorial missions, and
+repeatable clicking infrastructure remain in the core game.
 
 ## Developer checks
 
