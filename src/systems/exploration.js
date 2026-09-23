@@ -1,8 +1,11 @@
 import {regions,galaxySkills,galaxyTypes} from '../data/gameData.js';
+import {cosmicBonuses} from './cosmicEngine.js';
+import {megaBonuses,universeScale} from './incremental.js';
 
 export const navigationReady=s=>!!(s.research.exploration||s.upgrades.explorer);
 export const discoveryBonus=s=>(Object.keys(s.exploration.regions).length-1)*.05;
 export const isGalaxyVisible=(s,r)=>!!s.exploration.regions[r.id]||!!(r.parent&&s.exploration.regions[r.parent]);
+export function galaxyCost(s,r){const discount=Math.max(.25,1-skillLevel(s,'nav2')*.015-cosmicBonuses(s).frontier*.15-(megaBonuses(s).discovery||0));return Math.ceil(r.cost*universeScale(s)*discount);}
 export function galaxyBoosts(s){const result={production:0,energy:0,credits:0,research:0,knowledge:0,outpost:0};for(const r of regions)if(s.exploration.regions[r.id]){const type=galaxyTypes.find(t=>t.id===r.type);for(const [key,value] of Object.entries(type?.boost||{}))result[key]=(result[key]||0)+value;}return result;}
 export const skillLevel=(s,id)=>Math.max(0,Math.floor(s.exploration.skills?.[id]||0));
 export function skillCost(s,id){const node=galaxySkills.find(n=>n.id===id),level=skillLevel(s,id);return node?Math.ceil(node.cost*Math.pow(1.55,level)):Infinity;}
@@ -18,13 +21,13 @@ export function discoveryStatus(s,id){
  if(!navigationReady(s))return {ok:false,label:'Research Space Exploration'};
  if(!s.exploration.regions[r.parent])return {ok:false,label:'Discover '+regions.find(x=>x.id===r.parent).name};
  if(r.tech&&!s.research[r.tech])return {ok:false,label:'Research '+r.tech};
- const navigationDiscount=Math.max(.3,1-skillLevel(s,'nav2')*.015);if(s.resources.energy<r.cost*navigationDiscount)return {ok:false,label:'Insufficient energy'};
- return {ok:true,label:'Discover'};
+ const price=galaxyCost(s,r);if(s.resources.energy<price)return {ok:false,label:'Insufficient energy',cost:price};
+ return {ok:true,label:'Discover',cost:price};
 }
 export function discover(s,id){
  if(!discoveryStatus(s,id).ok)return false;
  const r=regions.find(r=>r.id===id);
- const navigationDiscount=Math.max(.3,1-skillLevel(s,'nav2')*.015);s.resources.energy-=Math.ceil(r.cost*navigationDiscount);s.exploration.regions[id]=1;
+ s.resources.energy-=galaxyCost(s,r);s.exploration.regions[id]=1;
  s.log.unshift('SYSTEM MAPPED — '+r.name+'; +5% production. Outpost available.');
  s.log=s.log.slice(0,50);return true;
 }
@@ -41,8 +44,9 @@ export function upgradeOutpost(s,id){
 }
 export function outpostProduction(s){
  const result={};
+ const outpostBoost=galaxyBoosts(s).outpost+(megaBonuses(s).outpost||0)+skillLevel(s,'nav3')*.02;
  for(const r of regions)if(s.exploration.regions[r.id])for(const [key,value] of Object.entries(r.prod||{})){
-  result[key]=(result[key]||0)+value*(s.exploration.outposts?.[r.id]||0)*(1+(skillLevel(s,'nav3')*.02)+galaxyBoosts(s).outpost);
+  result[key]=(result[key]||0)+value*(s.exploration.outposts?.[r.id]||0)*(1+outpostBoost);
  }
  return result;
 }
